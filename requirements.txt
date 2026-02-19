@@ -1,0 +1,11 @@
+pyspark==3.5.0
+pymongo==4.6.1
+requests==2.31.0
+beautifulsoup4==4.12.2
+pandas==2.1.4
+numpy==1.26.2
+nltk==3.8.1
+flask==3.0.0
+plotly==5.18.0
+pyyaml==6.0.1
+python-dateutil==2.8.2

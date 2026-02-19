@@ -1,0 +1,26 @@
+# Environnement Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Configuration locale
+config_local.yaml
+.env
+
+# Base de données locale
+*.db
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Windows
+Thumbs.db
+
+# Mac
+.DS_Store

@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détecteur de Tendances - Tableau de Bord Professionnel</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* En-tête */
+        header {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        h1 {
+            background: linear-gradient(135deg, #1e3c72, #7e22ce);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+        
+        .subtitle {
+            color: #64748b;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .last-update {
+            color: #94a3b8;
+            font-size: 1em;
+            background: #f1f5f9;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        /* Grille des statistiques */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: 35px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+        }
+        
+        .stat-card:nth-child(1)::before {
+            background: linear-gradient(90deg, #ef4444, #f97316);
+        }
+        
+        .stat-card:nth-child(2)::before {
+            background: linear-gradient(90deg, #8b5cf6, #a855f7);
+        }
+        
+        .stat-card:nth-child(3)::before {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+        }
+        
+        .stat-card:nth-child(4)::before {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+        
+        .stat-icon {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+        
+        .stat-card:nth-child(1) .stat-icon {
+            color: #ef4444;
+        }
+        
+        .stat-card:nth-child(2) .stat-icon {
+            color: #8b5cf6;
+        }
+        
+        .stat-card:nth-child(3) .stat-icon {
+            color: #3b82f6;
+        }
+        
+        .stat-card:nth-child(4) .stat-icon {
+            color: #10b981;
+        }
+        
+        .stat-value {
+            font-size: 4em;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card:nth-child(1) .stat-value {
+            color: #ef4444;
+        }
+        
+        .stat-card:nth-child(2) .stat-value {
+            color: #8b5cf6;
+        }
+        
+        .stat-card:nth-child(3) .stat-value {
+            color: #3b82f6;
+        }
+        
+        .stat-card:nth-child(4) .stat-value {
+            color: #10b981;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            margin-top: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        
+        /* Grille du contenu */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: 35px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .card h2 {
+            background: linear-gradient(135deg, #1e3c72, #7e22ce);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+            font-size: 2em;
+            font-weight: 800;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        /* Éléments tendance */
+        .trend-item {
+            padding: 25px;
+            border-left: 5px solid #3b82f6;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border-radius: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        
+        .trend-item:hover {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            transform: translateX(15px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+            border-left-color: #2563eb;
+        }
+        
+        .trend-title {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 1.15em;
+            line-height: 1.5;
+        }
+        
+        .trend-meta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 0.95em;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .trend-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .trend-meta i {
+            color: #3b82f6;
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.85em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .badge-viral {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            animation: pulse 2s infinite;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        .badge-en-hausse {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        }
+        
+        .badge-emergent {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+        
+        .badge-normal {
+            background: linear-gradient(135deg, #64748b, #475569);
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.05); }
+        }
+        
+        /* Mots-clés */
+        .keywords-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .keyword-tag {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border-radius: 30px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .keyword-tag:hover {
+            transform: translateY(-5px) scale(1.08);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+        
+        .keyword-count {
+            background: rgba(255,255,255,0.25);
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 700;
+        }
+        
+        /* Graphiques */
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-top: 25px;
+        }
+        
+        /* Chargement */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #94a3b8;
+            font-size: 1.3em;
+        }
+        
+        .spinner {
+            border: 5px solid #e2e8f0;
+            border-top: 5px solid #3b82f6;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* État vide */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #94a3b8;
+        }
+        
+        .empty-state i {
+            font-size: 6em;
+            margin-bottom: 25px;
+            opacity: 0.3;
+            color: #cbd5e1;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5em;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .stat-value {
+                font-size: 3em;
+            }
+        }
+        
+        /* Barre de défilement */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 6px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- En-tête -->
+        <header>
+            <h1><i class="fas fa-chart-line"></i> Détecteur de Tendances Pro</h1>
+            <p class="subtitle">Système Intelligent de Détection des Tendances Web</p>
+            <p id="last-update" class="last-update"></p>
+        </header>
+        
+        <!-- Cartes de statistiques -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-fire"></i></div>
+                <div class="stat-value" id="total-trends">-</div>
+                <div class="stat-label">Tendances Totales</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+                <div class="stat-value" id="active-trends">-</div>
+                <div class="stat-label">Tendances Actives</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-database"></i></div>
+                <div class="stat-value" id="total-documents">-</div>
+                <div class="stat-label">Documents Collectés</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-value" id="recent-data">-</div>
+                <div class="stat-label">Données Récentes (1h)</div>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="content-grid">
+            <div class="card">
+                <h2><i class="fas fa-fire-alt"></i> Tendances Actuelles</h2>
+                <div id="trending-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Chargement des tendances...
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-tags"></i> Mots-clés Tendance</h2>
+                <div id="keywords-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Chargement...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Graphique chronologique -->
+        <div class="card">
+            <h2><i class="fas fa-chart-area"></i> Évolution Temporelle</h2>
+            <div class="chart-container">
+                <canvas id="timelineChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Graphiques de distribution -->
+        <div class="content-grid" style="margin-top: 25px;">
+            <div class="card">
+                <h2><i class="fas fa-pie-chart"></i> Distribution par Source</h2>
+                <div class="chart-container">
+                    <canvas id="sourcesChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-list"></i> Catégories</h2>
+                <div class="chart-container">
+                    <canvas id="categoriesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const INTERVALLE_RAFRAICHISSEMENT_AUTO = 30000;
+        let graphiques = {};
+        
+        // Dictionnaire de traduction pour les titres courants
+        function traduireTitre(titre) {
+            const traductions = {
+                // Mots clés
+                'announced': 'annoncé',
+                'announces': 'annonce',
+                'breakthrough': 'percée',
+                'research': 'recherche',
+                'cancer': 'cancer',
+                'major': 'majeur',
+                'cybersecurity': 'cybersécurité',
+                'breach': 'violation',
+                'affects': 'affecte',
+                'millions': 'millions',
+                'tech': 'tech',
+                'giant': 'géant',
+                'layoffs': 'licenciements',
+                'electric': 'électrique',
+                'vehicle': 'véhicule',
+                'sales': 'ventes',
+                'hit': 'atteint',
+                'record': 'record',
+                'high': 'haut',
+                'launches': 'lance',
+                'new': 'nouveau',
+                'nouvelle': 'nouvelle',
+                'satellite': 'satellite',
+                'constellation': 'constellation',
+                'quantum': 'quantique',
+                'computing': 'informatique',
+                'reaches': 'atteint',
+                'milestone': 'étape',
+                'climate': 'climat',
+                'change': 'changement',
+                'summit': 'sommet',
+                'decisions': 'décisions',
+                'artificial': 'artificiel',
+                'intelligence': 'intelligence',
+                'ethics': 'éthique',
+                'debate': 'débat',
+                'intensifies': 'intensifie',
+                'machine': 'machine',
+                'learning': 'apprentissage',
+                'social': 'réseau social',
+                'media': 'média',
+                'platform': 'plateforme',
+                'changes': 'change',
+                'algorithm': 'algorithme',
+                'in': 'en',
+                'and': 'et',
+                'the': 'le',
+                'a': 'un',
+                'of': 'de',
+                'to': 'à',
+                'for': 'pour'
+            };
+            
+            let titreTraduit = titre.toLowerCase();
+            
+            // Remplacer les mots un par un
+            for (const [anglais, francais] of Object.entries(traductions)) {
+                const regex = new RegExp('\\b' + anglais + '\\b', 'gi');
+                titreTraduit = titreTraduit.replace(regex, francais);
+            }
+            
+            // Capitaliser la première lettre
+            return titreTraduit.charAt(0).toUpperCase() + titreTraduit.slice(1);
+        }
+        
+        function formaterDate(chaineDate) {
+            const date = new Date(chaineDate);
+            return date.toLocaleString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function formaterNombre(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+        
+        async function chargerStats() {
+            try {
+                const reponse = await fetch('/api/stats');
+                const stats = await reponse.json();
+                
+                document.getElementById('total-trends').textContent = formaterNombre(stats.total_trends);
+                document.getElementById('active-trends').textContent = formaterNombre(stats.active_trends);
+                document.getElementById('total-documents').textContent = formaterNombre(stats.total_documents);
+                document.getElementById('recent-data').textContent = formaterNombre(stats.recent_data);
+                document.getElementById('last-update').textContent = 
+                    `Dernière mise à jour : ${formaterDate(stats.last_update)}`;
+            } catch (erreur) {
+                console.error('Erreur:', erreur);
+            }
+        }
+        
+        async function chargerTendances() {
+            try {
+                const reponse = await fetch('/api/trending?limit=10');
+                const tendances = await reponse.json();
+                
+                const conteneur = document.getElementById('trending-list');
+                
+                if (tendances.length === 0) {
+                    conteneur.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>Aucune tendance détectée pour le moment</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                conteneur.innerHTML = tendances.map(tendance => {
+                    // Traduire les statuts en français sauf "viral"
+                    let statutTraduit = tendance.status;
+                    let classeStatut = tendance.status;
+                    
+                    if (tendance.status === 'rising') {
+                        statutTraduit = 'en hausse';
+                        classeStatut = 'en-hausse';
+                    } else if (tendance.status === 'emerging') {
+                        statutTraduit = 'émergent';
+                        classeStatut = 'emergent';
+                    } else if (tendance.status === 'normal') {
+                        statutTraduit = 'normal';
+                        classeStatut = 'normal';
+                    }
+                    // "viral" reste "viral"
+                    
+                    // Traduire le titre en français
+                    const titreTraduit = traduireTitre(tendance.title || tendance.topic);
+                    
+                    return `
+                    <div class="trend-item">
+                        <div class="trend-title">
+                            ${titreTraduit}
+                            <span class="badge badge-${classeStatut}">${statutTraduit}</span>
+                        </div>
+                        <div class="trend-meta">
+                            <span>
+                                <i class="fas fa-star"></i>
+                                Score : ${tendance.trend_score ? tendance.trend_score.toFixed(2) : 'N/A'}
+                            </span>
+                            <span>
+                                <i class="fas fa-comment"></i>
+                                ${tendance.mentions || 0} mentions
+                            </span>
+                            <span>
+                                <i class="fas fa-fire"></i>
+                                ${formaterNombre(tendance.total_score || 0)} interactions
+                            </span>
+                            ${tendance.velocity ? `
+                                <span>
+                                    <i class="fas fa-rocket"></i>
+                                    ${tendance.velocity.toFixed(1)}/h
+                                </span>
+                            ` : ''}
+                        </div>
+                    </div>
+                `}).join('');
+            } catch (erreur) {
+                console.error('Erreur:', erreur);
+            }
+        }
+        
+        async function chargerMotsCles() {
+            try {
+                const reponse = await fetch('/api/keywords?limit=30');
+                const motsCles = await reponse.json();
+                
+                const conteneur = document.getElementById('keywords-list');
+                
+                if (motsCles.length === 0) {
+                    conteneur.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-tags"></i>
+                            <p>Aucun mot-clé détecté</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                conteneur.innerHTML = '<div class="keywords-container">' +
+                    motsCles.map(mc => `
+                        <div class="keyword-tag">
+                            ${mc.keyword}
+                            <span class="keyword-count">${formaterNombre(mc.frequency)}</span>
+                        </div>
+                    `).join('') +
+                    '</div>';
+            } catch (erreur) {
+                console.error('Erreur:', erreur);
+            }
+        }
+        
+        async function chargerChronologie() {
+            try {
+                const reponse = await fetch('/api/timeline?hours=24');
+                const donnees = await reponse.json();
+                
+                const ctx = document.getElementById('timelineChart').getContext('2d');
+                
+                if (graphiques.chronologie) {
+                    graphiques.chronologie.destroy();
+                }
+                
+                graphiques.chronologie = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: donnees.map(d => d._id),
+                        datasets: [{
+                            label: 'Mentions',
+                            data: donnees.map(d => d.count),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (erreur) {
+                console.error('Erreur:', erreur);
+            }
+        }
+        
+        async function chargerSources() {
+            try {
+                const reponse = await fetch('/api/sources');
+                const donnees = await reponse.json();
+                
+                const ctx = document.getElementById('sourcesChart').getContext('2d');
+                
+                if (graphiques.sources) {
+                    graphiques.sources.destroy();
+                }
+                
+                graphiques.sources = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: donnees.map(d => d._id),
+                        datasets: [{
+                            data: donnees.map(d => d.count),
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.8)',
+                                'rgba(139, 92, 246, 0.8)',
+                                'rgba(239, 68, 68, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(245, 158, 11, 0.8)'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            } catch (erreur) {
+                console.error('Erreur:', erreur);
+            }
+        }
+        
+        async function chargerCategories() {
+            try {
+                const reponse = await fetch('/api/categories');
+                const donnees = await reponse.json();
+                
+                const ctx = document.getElementById('categoriesChart').getContext('2d');
+                
+                if (graphiques.categories) {
+                    graphiques.categories.destroy();
+                }
+                
+                graphiques.categories = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: donnees.map(d => d._id),
+                        datasets: [{
+                            label: 'Publications',
+                            data: donnees.map(d => d.count),
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            borderRadius: 10,
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (erreur) {
+                console.error('Erreur:', erreur);
+            }
+        }
+        
+        function chargerTout() {
+            chargerStats();
+            chargerTendances();
+            chargerMotsCles();
+            chargerChronologie();
+            chargerSources();
+            chargerCategories();
+        }
+        
+        chargerTout();
+        setInterval(chargerTout, INTERVALLE_RAFRAICHISSEMENT_AUTO);
+        
+        console.log('✅ Tableau de Bord Professionnel chargé - Rafraîchissement automatique toutes les 30s');
+    </script>
+</body>
+</html>

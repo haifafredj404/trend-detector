@@ -1,0 +1,31 @@
+mongodb:
+  host: localhost
+  port: 27017
+  database: trend_detector_db
+
+spark:
+  app_name: TrendDetector
+  master: local[*]
+
+data_sources:
+  reddit:
+    enabled: true
+    subreddits:
+      - technology
+      - worldnews
+      - artificial
+      - programming
+      - datascience
+    limit: 50
+
+trend_detection:
+  time_window_hours: 3
+  min_mentions: 5
+  velocity_threshold: 1.5
+  trend_score_threshold: 3.0
+
+dashboard:
+  host: 0.0.0.0
+  port: 5000
+  debug: true
+  auto_refresh_seconds: 30
